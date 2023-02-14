@@ -24,7 +24,7 @@ export default function Login() {
         if (user) {
             route.push("/");
         } else {
-            console.loh("login");
+            console.log("login");
         }
     }, [user]);
     return (
