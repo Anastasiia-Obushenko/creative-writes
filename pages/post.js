@@ -21,7 +21,8 @@ export default function Post() {
             });
             return;
         }
-        if (!post.description.length>300) {
+        if (post.description.length > 300) {
+            console.log()
             toast.error("Description too long", {
                 position: toast.POSITION.TOP_CENTER,
                 autoClose: 1500,
