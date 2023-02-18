@@ -2,7 +2,7 @@ import { auth, db } from '@/utils/firebase';
 import { useRouter } from 'next/router';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useEffect, useState } from 'react';
-import { addDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, addDoc, serverTimestamp, collection, updateDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 
 export default function Post() {
@@ -10,6 +10,7 @@ export default function Post() {
     const [post, setPost] = useState({ description: "" });
     const [user, loading] = useAuthState(auth);
     const route = useRouter();
+    const routeData = route.query;
     //Submit Post
     const submitPost = async (e) => {
         e.preventDefault();
@@ -22,29 +23,49 @@ export default function Post() {
             return;
         }
         if (post.description.length > 300) {
-            console.log()
+            console.log();
             toast.error("Description too long", {
                 position: toast.POSITION.TOP_CENTER,
                 autoClose: 1500,
             });
             return;
         }
-        // Make a new post
-        const collectionRef = collection(db, 'posts');
-        await addDoc(collectionRef, {
-            ...post,
-            timestamp: serverTimestamp(),
-            user: user.uid,
-            avatar: user.photoURL,
-            username: user.displayName,
-        });
-        setPost({ description: '' });
-        return route.push('/');
+        if (post?.hasOwnProperty('id')) {
+            const docRef = doc(db, 'posts', post.id);
+            const updatedPost = { ...post, timestamp: serverTimestamp() };
+            await updateDoc(docRef, updatedPost);
+            return route.push('/');
+        } else {
+            // Make a new post
+            const collectionRef = collection(db, 'posts');
+            await addDoc(collectionRef, {
+                ...post,
+                timestamp: serverTimestamp(),
+                user: user.uid,
+                avatar: user.photoURL,
+                username: user.displayName,
+            });
+            setPost({ description: '' });
+            return route.push('/');
+        }
     };
+    // Check our user
+    const checkUser = async () => {
+        if (loading) return;
+        if (!user) route.push('/auth/login');
+        if (routeData.id) {
+            setPost({ description: routeData.description, id: routeData.id });
+        }
+    };
+    useEffect(() => {
+        checkUser();
+    }, [user, loading]);
     return (
         <div className=' my-20 p-12 shadow-lg rounded-lg max-w-md mx-auto'>
             <form onSubmit={submitPost}>
-                <h1 className=' text-2xl font-bold'>Create new post</h1>
+                <h1 className=' text-2xl font-bold'>
+                    {post.hasOwnProperty('id') ? 'Edit your post' : 'Create your post'}
+                </h1>
                 <div className='py-2'>
                     <h3 className=' text-lg font-medium py-2' >
                         Description
