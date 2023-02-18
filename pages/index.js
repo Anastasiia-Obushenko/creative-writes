@@ -14,7 +14,6 @@ export default function Home() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setAllPosts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
     });
-    console.log("a");
     return unsubscribe;
   };
 
@@ -34,7 +33,7 @@ export default function Home() {
           See what other people are saying
         </h2>
         {allPosts.map(post => (
-          <Message{...post}>
+          <Message{...post} key={post.id}>
 
           </Message>
         ))}
